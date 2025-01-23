@@ -2,22 +2,44 @@ import Loader from '../components/Loader';
 import StarRating from '../components/StarRating';
 import { useEffect, useState } from 'react';
 
-export default function MovieDetails({ API_KEY, selectedID, onCloseMovie }) {
+export default function MovieDetails({
+  API_KEY,
+  selectedID,
+  onCloseMovie,
+  onAddWatched,
+  watched,
+}) {
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [userRating, setUserRating] = useState(0);
+
+  const isWatched = watched.some((movie) => movie.imdbID === selectedID);
+
+  const watchedUserRating = watched.find(
+    (movie) => movie.imdbID === selectedID
+  )?.userRating;
 
   const {
-    Title: title,
-    Year: year,
-    Poster: poster,
-    Runtime: runtime,
+    Title,
+    Year,
+    Poster,
+    Runtime,
     imdbRating,
-    Plot: plot,
-    Released: released,
-    Actors: actors,
-    Director: director,
-    Genre: genre,
+    Plot,
+    Released,
+    Actors,
+    Director,
+    Genre,
   } = movie;
+
+  function handleAdd() {
+    onAddWatched({
+      ...movie,
+      userRating,
+      Runtime: Number(Runtime.split(' ').at(0)),
+    });
+    onCloseMovie();
+  }
 
   useEffect(() => {
     async function getMovieDetails() {
@@ -31,7 +53,6 @@ export default function MovieDetails({ API_KEY, selectedID, onCloseMovie }) {
         }
         const data = await response.json();
         setMovie(data);
-        console.log(data);
       } catch (err) {
         console.error(err.message);
       } finally {
@@ -44,6 +65,34 @@ export default function MovieDetails({ API_KEY, selectedID, onCloseMovie }) {
     }
   }, [API_KEY, selectedID]);
 
+  useEffect(
+    function () {
+      document.title = `${Title || 'usePopcorn'}`;
+
+      return function () {
+        document.title = 'usePopcorn';
+      };
+    },
+    [Title]
+  );
+
+  useEffect(
+    function () {
+      function handleKeyDown(event) {
+        if (event.key === 'Escape') {
+          onCloseMovie();
+        }
+      }
+
+      window.addEventListener('keydown', handleKeyDown);
+
+      return function () {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    },
+    [onCloseMovie]
+  );
+
   return isLoading ? (
     <Loader />
   ) : (
@@ -52,13 +101,13 @@ export default function MovieDetails({ API_KEY, selectedID, onCloseMovie }) {
         <button className='btn-back' onClick={onCloseMovie}>
           &larr;
         </button>
-        <img src={poster} alt={`Poster of ${movie} movie`} />
+        <img src={Poster} alt={`Poster of ${movie} movie`} />
         <div className='details-overview'>
-          <h2>{title}</h2>
+          <h2>{Title}</h2>
           <p>
-            {released} &bull; {runtime}
+            {Released} &bull; {Runtime}
           </p>
-          <p>{genre}</p>
+          <p>{Genre}</p>
           <p>
             <span>⭐️</span>
             {imdbRating} IMDb rating
@@ -67,13 +116,30 @@ export default function MovieDetails({ API_KEY, selectedID, onCloseMovie }) {
       </header>
       <section>
         <div className='rating'>
-          <StarRating maxRating={10} size={24} />
+          {isWatched ? (
+            <p>
+              <span>You rated this movie {watchedUserRating} 🌟</span>
+            </p>
+          ) : (
+            <>
+              <StarRating
+                maxRating={10}
+                size={24}
+                onSetRating={setUserRating}
+              />
+              {userRating > 0 && (
+                <button className='btn-add' onClick={handleAdd}>
+                  + Add to List
+                </button>
+              )}
+            </>
+          )}
         </div>
         <p>
-          <em>{plot}</em>
+          <em>{Plot}</em>
         </p>
-        <p>Starring {actors}</p>
-        <p>Directed by {director}</p>
+        <p>Starring {Actors}</p>
+        <p>Directed by {Director}</p>
       </section>
     </div>
   );

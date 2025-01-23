@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { tempMovieData } from './movieData.js';
 import NavBar from './components/NavBar.js';
 import Logo from './components/Logo';
 import Search from './components/Search';
@@ -12,16 +11,14 @@ import ErrorMessage from './components/ErrorMessage';
 import WatchedSummary from './components/WatchedSummary.js';
 import WatchedMoviesList from './components/WatchedMoviesList.js';
 import MovieDetails from './components/MovieDetails';
-import { tempWatchedData } from './movieData.js';
-
-const API_KEY = '10614604';
+import { API_KEY } from './constants/keys';
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState(tempWatchedData);
+  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [query, setQuery] = useState('interstellar');
+  const [query, setQuery] = useState('');
   const [selectedID, setSelectedID] = useState('');
 
   function handleSelectMovie(id) {
@@ -32,39 +29,61 @@ export default function App() {
     setSelectedID(null);
   }
 
-  useEffect(() => {
-    async function getMovies() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await fetch(
-          `https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
-        );
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
+  function handleAddWatched(movie) {
+    setWatched([...watched, movie]);
+  }
+
+  function handleDeleteWatched(id) {
+    setWatched(watched.filter((movie) => movie.imdbID !== id));
+  }
+
+  useEffect(
+    function () {
+      const controller = new AbortController();
+      const signal = controller.signal;
+      async function getMovies() {
+        try {
+          setIsLoading(true);
+          setError(null);
+          const response = await fetch(
+            `https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`,
+            { signal }
+          );
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          const data = await response.json();
+          if (data.Response === 'False') {
+            throw new Error(data.Error);
+          }
+          setMovies(data.Search);
+          setError(null);
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            setMovies([]);
+            setError(err.message);
+          }
+        } finally {
+          setIsLoading(false);
         }
-        const data = await response.json();
-        if (data.Response === 'False') {
-          throw new Error(data.Error);
-        }
-        setMovies(data.Search);
-      } catch (err) {
-        setMovies([]);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
       }
-    }
 
-    if (query.length < 3) {
-      setMovies([]);
-      setError(null);
-      setIsLoading(false);
-      return;
-    }
+      if (query.length < 3) {
+        setMovies([]);
+        setError(null);
+        setIsLoading(false);
+        return;
+      }
 
-    getMovies();
-  }, [query]);
+      handleCloseMovie();
+      getMovies();
+
+      return function () {
+        controller.abort();
+      };
+    },
+    [query]
+  );
 
   return (
     <>
@@ -76,9 +95,6 @@ export default function App() {
 
       <Main>
         <Box>
-          {console.log('MovieList rendered')}
-          {console.log(movies)}
-          {console.log('error:', error)}
           {isLoading ? (
             <Loader />
           ) : error ? (
@@ -94,11 +110,16 @@ export default function App() {
               API_KEY={API_KEY}
               selectedID={selectedID}
               onCloseMovie={handleCloseMovie}
+              onAddWatched={handleAddWatched}
+              watched={watched}
             />
           ) : (
             <>
               <WatchedSummary watched={watched} />
-              <WatchedMoviesList watched={watched} />
+              <WatchedMoviesList
+                watched={watched}
+                onDeleteWatched={handleDeleteWatched}
+              />
             </>
           )}
         </Box>
