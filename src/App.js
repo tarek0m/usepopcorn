@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useMovies } from './hooks/useMovies.js';
 import NavBar from './components/NavBar.js';
 import Logo from './components/Logo';
 import Search from './components/Search';
@@ -14,12 +15,10 @@ import MovieDetails from './components/MovieDetails';
 import { API_KEY } from './constants/keys';
 
 export default function App() {
-  const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState(watchedStateCallback);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [selectedID, setSelectedID] = useState('');
+  const [movies, isLoading, error] = useMovies(query, handleCloseMovie);
 
   function watchedStateCallback() {
     const watched = localStorage.getItem('watched');
@@ -47,54 +46,6 @@ export default function App() {
       localStorage.setItem('watched', JSON.stringify(watched));
     },
     [watched]
-  );
-
-  useEffect(
-    function () {
-      const controller = new AbortController();
-      const signal = controller.signal;
-      async function getMovies() {
-        try {
-          setIsLoading(true);
-          setError(null);
-          const response = await fetch(
-            `https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`,
-            { signal }
-          );
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          const data = await response.json();
-          if (data.Response === 'False') {
-            throw new Error(data.Error);
-          }
-          setMovies(data.Search);
-          setError(null);
-        } catch (err) {
-          if (err.name !== 'AbortError') {
-            setMovies([]);
-            setError(err.message);
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      }
-
-      if (query.length < 3) {
-        setMovies([]);
-        setError(null);
-        setIsLoading(false);
-        return;
-      }
-
-      handleCloseMovie();
-      getMovies();
-
-      return function () {
-        controller.abort();
-      };
-    },
-    [query]
   );
 
   return (
