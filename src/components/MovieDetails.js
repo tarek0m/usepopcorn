@@ -1,6 +1,6 @@
 import Loader from '../components/Loader';
 import StarRating from '../components/StarRating';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export default function MovieDetails({
   API_KEY,
@@ -12,6 +12,7 @@ export default function MovieDetails({
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [userRating, setUserRating] = useState(0);
+  const countRef = useRef(0);
 
   const isWatched = watched.some((movie) => movie.imdbID === selectedID);
 
@@ -37,9 +38,14 @@ export default function MovieDetails({
       ...movie,
       userRating,
       Runtime: Number(Runtime.split(' ').at(0)),
+      countRatingDecisions: countRef.current,
     });
     onCloseMovie();
   }
+
+  useEffect(() => {
+    if (userRating) countRef.current += 1;
+  }, [userRating]);
 
   useEffect(() => {
     async function getMovieDetails() {
