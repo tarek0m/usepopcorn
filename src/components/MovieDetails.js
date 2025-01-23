@@ -1,6 +1,7 @@
 import Loader from '../components/Loader';
 import StarRating from '../components/StarRating';
 import { useEffect, useState, useRef } from 'react';
+import { useKey } from '../hooks/useKey';
 
 export default function MovieDetails({
   API_KEY,
@@ -82,22 +83,7 @@ export default function MovieDetails({
     [Title]
   );
 
-  useEffect(
-    function () {
-      function handleKeyDown(event) {
-        if (event.key === 'Escape') {
-          onCloseMovie();
-        }
-      }
-
-      window.addEventListener('keydown', handleKeyDown);
-
-      return function () {
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    },
-    [onCloseMovie]
-  );
+  useKey('Escape', onCloseMovie);
 
   return isLoading ? (
     <Loader />
