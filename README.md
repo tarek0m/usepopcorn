@@ -1,7 +1,7 @@
 # usePopcorn
 
 usePopcorn is a React-based web application that allows users to search for movies, view movie details, and manage a list of watched movies. The application fetches movie data from the [OMDB API](https://www.omdbapi.com/) and provides a user-friendly interface for interacting with the movie database.
-![Screenshot 1](public/screenshots/screenshot1.png)
+![Screenshot 1](docs/screenshots/screenshot1.png)
 
 ## Features
 
@@ -26,7 +26,7 @@ usePopcorn is a React-based web application that allows users to search for movi
 
 ```
 usepopcorn/
-├── public/
+├── docs/
 │   └── index.html
 ├── screenshots/
 │   ├── screenshot1.png
@@ -95,8 +95,8 @@ usepopcorn/
 
 ## Screenshots
 
-![Screenshot 2](public/screenshots/screenshot2.png)
-![Screenshot 3](public/screenshots/screenshot3.png)
+![Screenshot 2](docs/screenshots/screenshot2.png)
+![Screenshot 3](docs/screenshots/screenshot3.png)
 
 ## Live Demo
 
