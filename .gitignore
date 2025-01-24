@@ -1,5 +1,2 @@
 # dependencies
 /node_modules
-
-# keys
-/src/constants/keys.js

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMovies } from './hooks/useMovies.js';
-import { useLocalStorageState } from './hooks/useLocalStorageState.js';
+import { useMovieSelection } from './hooks/useMovieSelection';
 import NavBar from './components/NavBar.js';
 import Logo from './components/Logo';
 import Search from './components/Search';
@@ -16,26 +16,16 @@ import MovieDetails from './components/MovieDetails';
 import { API_KEY } from './constants/keys';
 
 export default function App() {
-  const [watched, setWatched] = useLocalStorageState([], 'watched');
   const [query, setQuery] = useState('');
-  const [selectedID, setSelectedID] = useState('');
+  const [
+    watched,
+    selectedID,
+    handleSelectMovie,
+    handleCloseMovie,
+    handleAddWatched,
+    handleDeleteWatched,
+  ] = useMovieSelection();
   const [movies, isLoading, error] = useMovies(query, handleCloseMovie);
-
-  function handleSelectMovie(id) {
-    setSelectedID(selectedID === id ? null : id);
-  }
-
-  function handleCloseMovie() {
-    setSelectedID(null);
-  }
-
-  function handleAddWatched(movie) {
-    setWatched([...watched, movie]);
-  }
-
-  function handleDeleteWatched(id) {
-    setWatched(watched.filter((movie) => movie.imdbID !== id));
-  }
 
   return (
     <>
@@ -74,6 +64,7 @@ export default function App() {
               <WatchedSummary watched={watched} />
               <WatchedMoviesList
                 watched={watched}
+                onSelectMovie={handleSelectMovie}
                 onDeleteWatched={handleDeleteWatched}
               />
             </>
